@@ -7,6 +7,18 @@ Web application that analyzes GitHub repositories and turns them into **project 
 
 ---
 
+## Getting Started
+  **Requirements:** PHP 8.4, Composer       
+
+  ```bash
+  composer install
+  php bin/console
+  doctrine:migrations:migrate
+  php -S localhost:8000 -t public
+  public/index.php
+
+  ```
+
 ## Features
 
 - **Input**: A GitHub repository URL (e.g. `Bank-Transaction`, `NavMelb`, `AccountabilityApp`)
@@ -17,8 +29,9 @@ Web application that analyzes GitHub repositories and turns them into **project 
   - Generate workflow/network diagram data (Mermaid.js)
 - **Output**:
   - JSON APIs for project, activities, and analysis
-  - Diagrams you can embed in docs or a UI
-  - A clean story for your portfolio about *Project Management Essentials*
+  - Diagrams embedded in docs or a UI
+
+  (Following what I have learned in Project Management Essentials)
 
  ## Tech Stack
 
