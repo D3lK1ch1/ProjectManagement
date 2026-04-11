@@ -1,80 +1,78 @@
 # Project Management Analytics System
+A web-app taking GitHub projects for analysis in order to plan project management.
 
-Web application that analyzes GitHub repositories and turns them into **project management insights**:
-- PERT/CPM critical path analysis
-- Activity network and workflow diagrams (Mermaid.js)
-- Basic statistics about development patterns across your projects
+## Description
+
+A Symfony REST API that takes a GitHub repository URL, maps its commit history into activities, and runs PERT/CPM critical path analysis to generate project management insights and network diagrams.
+
+---
+
+## Current Features
+
+- Symfony 8.0 REST API scaffold with SQLite (local dev)
+- `Project` and `Activity` Doctrine ORM entities
+- Database schema managed via Doctrine Migrations
+
+---
+
+## Built With
+
+- **PHP 8.4** — language runtime
+- **Symfony 8.0** — REST API framework, dependency injection, routing
+- **Doctrine ORM** — entity mapping and migrations
+- **SQLite** — local development database (`var/data.db`)
+- **GitHub REST API** — planned source of commit and branch data
+- **Mermaid.js** — planned diagram rendering
 
 ---
 
 ## Getting Started
-  **Requirements:** PHP 8.4, Composer       
 
-  ```bash
-  composer install
-  php bin/console
-  doctrine:migrations:migrate
-  php -S localhost:8000 -t public
-  public/index.php
+### Prerequisites
 
-  ```
+- PHP 8.4+
+- Composer
 
-## Features
+### Installation
 
-- **Input**: A GitHub repository URL (e.g. `Bank-Transaction`, `NavMelb`, `AccountabilityApp`)
-- **Processing**:
-  - Call the GitHub API
-  - Map commits and branches to activities and dependencies
-  - Run PERT/CPM to find the critical path, duration, and slack
-  - Generate workflow/network diagram data (Mermaid.js)
-- **Output**:
-  - JSON APIs for project, activities, and analysis
-  - Diagrams embedded in docs or a UI
+```bash
+git clone <repo-url>
+cd ProjectManagement
+composer install
+php bin/console doctrine:migrations:migrate
+php -S localhost:8000 -t public public/index.php
+```
 
-  (Following what I have learned in Project Management Essentials)
+Visit `http://localhost:8000` to confirm the Symfony welcome page loads.
 
- ## Tech Stack
+Optional — add a GitHub token to avoid API rate limits (never commit this file):
 
-- **PHP 8.4 / Symfony 8.0** — REST API, GitHub integration, PERT/CPM service layer
-- **Azure App Service** — host the Symfony API
-- **Azure SQL or SQLite** — store projects, activities, and dependencies
-- **Azure Blob Storage (optional)** — store exported diagrams/reports
-- **GitHub API** — source of commit and repo data
-
----
-
-## High-Level Architecture
-
-- **API layer (Symfony)**
-  - Controllers under `src/Controller/`
-  - Services (e.g. `CriticalPathService`) for PERT/CPM logic under `src/Service/`
-  - Doctrine entities for `Project`, `Activity`, `ActivityDependency` under `src/Entity/`
-  - Repositories for database queries under `src/Repository/`
-
-- **Database**
-  - Local: SQLite for easy development (`var/data.db`)
-  - Cloud: Azure SQL when deploying
-
-- **Integrations**
-  - GitHub REST API for repository and commit history (via Symfony HttpClient)
-  - Mermaid.js or similar for diagram rendering on the front end
-
-Directory overview (target state):
-
-```text
-ProjectManagement/
-├── src/
-│   ├── Controller/     # API controllers (routing via PHP attributes)
-│   ├── Entity/         # Doctrine entities (Project, Activity, ActivityDependency)
-│   ├── Repository/     # Entity repositories
-│   └── Service/        # Business logic (CriticalPathService, GitHubService)
-├── config/             # Symfony bundle and service configuration
-├── migrations/         # Doctrine database migrations
-├── docs/               # Concept and Azure notes
-├── var/
-│   └── data.db         # SQLite database (local dev only)
-└── ReadME.md           # This file
+```bash
+# .env.local
+GITHUB_TOKEN=your_personal_access_token
 ```
 
 ---
 
+## Usage
+
+_To be documented once API endpoints are implemented._
+
+---
+
+## Roadmap
+- [ ] `ActivityDependency` entity (predecessor/successor graph edges)
+- [ ] `CriticalPathService` — forward pass, backward pass, slack, critical path
+- [ ] `ProjectController` — `GET /api/projects`, `GET /api/projects/{id}/critical-path`
+- [ ] `GitHubController` — `POST /api/github/import`
+- [ ] Map commits and branches to activities and dependencies
+- [ ] Network diagram endpoint returning Mermaid-compatible data
+- [ ] Azure App Service (PHP 8.4)
+- [ ] Azure SQL or SQLite-on-disk for production
+- [ ] Application Insights for monitoring
+
+---
+
+## License
+
+To be determined.
