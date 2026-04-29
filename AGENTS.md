@@ -1,58 +1,44 @@
 ## Agents Used
-* GitHub Copilot
-* Gemini CLI
-* Claude Code
-* OpenCode
-
-This markdown is used throughout all projects, as rules and regulations to project across.
+* GitHub Copilot · Gemini CLI · Claude Code · OpenCode
 
 ---
 
 ## Agent Guidelines
-- Chatbots are allowed to improve and update this markdown
-- Focus on incremental, validated changes
-- Always cross-reference this file when starting new sessions
-- Ensure the user follows the guidelines to research -> plan -> execute -> review -> revise
+- Boilerplate and syntax help only — user writes core logic
+- Workflow: research → plan → execute → review → revise
+- No extra markdown files per change; summarise decisions in chat
+
+## Code Review & Quality
+- No comments in code — explain decisions in chat
+- KISS: simplest solution first, no premature abstractions
+- Parameters fully typed; edge cases handled explicitly, no silent failures
+
+## Testing & Validation
+- User runs all commands; agents provide commands only
+- Test before shipping: unit first, integration for routes
+- Document results here: what tested, passed/failed, improvements
+
 ---
-## Core Instructions
 
-- Find and read docs, give a boiler plate but not core functionality. 
-- User is not allowed for poor planning, shallow understanding of the code, letting AI do what it wants etc
+## Project: ProjectManagement (Symfony 8.0 / PHP 8.4 / SQLite)
 
-### Code Review & Quality
-- **No comments in code** - explain decisions in chat during review
-- **Outline exploration** - check Explorer to understand function signatures, inputs → outputs
-- **KISS principle** - implement simplest solution first, avoid premature optimization, avoid overthinking with extra hooks, abstracts etc
-- **Not overdefensive**  - no extra type escapes
-- **Edge cases** - handle errors explicitly; no silent failures
+### Stack
+- Symfony 8.0, PHP 8.4, SQLite local via Doctrine ORM
+- Test runner: `php bin/phpunit`
 
-### Testing & Validation Strategy
-- User runs commands themselves (agents provide command guidance only)
-- **Test before shipping**: unit tests for critical paths, integration tests for routes
-- **Document test results**: what was tested, what passed/failed, improvements made
+### Key Entities
+- `Project` → `Activity` (duration) → linked by `ActivityDependency` (predecessor_id, successor_id)
+- ES/EF/LS/LF/slack are **computed outputs** — never stored as DB columns
 
-### Documentation Approach  
-- No extra markdown files per change
-- Summarize in chat: Problem → Solution → Validation Results
-- Track what worked vs what didn't for pattern recognition
-- No inconsistent files
+### CriticalPathService contract
+- Input: `$activities [{id, duration}]`, `$dependencies [{predecessor, successor}]`
+- Output: `{project_duration, critical_path[], activities{id: {es,ef,ls,lf,slack,is_critical}}}`
+- Pipeline: `topologicalSort → forwardPass → backwardPass → buildResult`
 
 ---
 
 ## Known Issues & Fixes
-
+- `docs/activity-network-analysis.md` typo: D slack shown as 6, correct is 9 (LS 12 − ES 3)
 
 ## Testing & Validation Log
-
-
-
-
-## Code Quality Checklist
-When implementing features:
-- [ ] Error handling: try-catch or .catch() where applicable
-- [ ] No unused imports or variables
-- [ ] Function parameters fully typed
-- [ ] Exported types match backend contracts
-- [ ] Edge cases documented in chat
-
----
+- Step 7 ✅ `CriticalPathServiceTest::testEightActivityExample` — 4 assertions pass
