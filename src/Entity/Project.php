@@ -18,7 +18,7 @@ class Project
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $repoUrl = null;
 
     /**
@@ -54,7 +54,7 @@ class Project
         return $this->repoUrl;
     }
 
-    public function setRepoUrl(string $repoUrl): static
+    public function setRepoUrl(?string $repoUrl): static
     {
         $this->repoUrl = $repoUrl;
 
@@ -82,7 +82,6 @@ class Project
     public function removeActivity(Activity $activity): static
     {
         if ($this->activities->removeElement($activity)) {
-            // set the owning side to null (unless already changed)
             if ($activity->getProject() === $this) {
                 $activity->setProject(null);
             }

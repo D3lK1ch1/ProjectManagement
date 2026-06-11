@@ -24,14 +24,14 @@ class CriticalPathService
         }
 
         foreach ($dependencies as $dep) {
-            $predecesor = $dep['predecessor'];
+            $predecessor = $dep['predecessor'];
             $successor = $dep['successor'];
 
-            $adjList[$predecesor][] = $successor;
+            $adjList[$predecessor][] = $successor;
             $inDegree[$successor] = ($inDegree[$successor] ?? 0) + 1;
         }
 
-        foreach ($inDegree as $node => $count){
+        foreach ($inDegree as $node => $count) {
             if ($count === 0) {
                 $queue[] = $node;
             }
@@ -49,7 +49,6 @@ class CriticalPathService
         }
 
         return $sorted;
-        
     }
 
     private function forwardPass(array $sorted, array $activities, array $dependencies): array
@@ -62,14 +61,14 @@ class CriticalPathService
             $durations[$activity['id']] = $activity['duration'];
         }
 
-        foreach ($sorted as $id){
+        foreach ($sorted as $id) {
             $predecessors = array_map(fn($d) => $d['predecessor'], array_filter($dependencies, fn($d) => $d['successor'] === $id));
 
             $es[$id] = $predecessors ? max(array_map(fn($p) => $ef[$p], $predecessors)) : 0;
             $ef[$id] = $es[$id] + $durations[$id];
-        } 
-        return ['es' => $es, 'ef' => $ef];
+        }
 
+        return ['es' => $es, 'ef' => $ef];
     }
 
     private function backwardPass(array $sorted, array $activities, array $dependencies, array $forward): array
@@ -100,7 +99,7 @@ class CriticalPathService
 
         foreach ($sorted as $id) {
             $slack[$id] = $backward['ls'][$id] - $forward['es'][$id];
-            $isCritical[$id] = $slack[$id] === 0;
+            $isCritical[$id] = $slack[$id] == 0;
 
             if ($isCritical[$id]) {
                 $criticalPath[] = $id;
@@ -112,7 +111,7 @@ class CriticalPathService
                 'ls' => $backward['ls'][$id],
                 'lf' => $backward['lf'][$id],
                 'slack' => $slack[$id],
-                'is_critical' => $isCritical[$id]
+                'is_critical' => $isCritical[$id],
             ];
         }
 
