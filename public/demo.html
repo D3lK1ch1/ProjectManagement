@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Planner — What has to happen first?</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+    header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 16px 24px;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; }
+    header p  { font-size: 0.8rem; opacity: 0.6; margin-top: 2px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      min-height: calc(100vh - 58px);
+    }
+
+    aside {
+      background: #fff;
+      border-right: 1px solid #e2e8f0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      overflow-y: auto;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    .project-list { display: flex; flex-direction: column; gap: 6px; }
+    .project-btn {
+      text-align: left;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #f8fafc;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.15s;
+    }
+    .project-btn:hover  { background: #e0f2fe; border-color: #7dd3fc; }
+    .project-btn.active { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
+
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-group input, .input-group textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+    .input-group textarea { min-height: 90px; }
+    .input-hint { font-size: 0.72rem; color: #94a3b8; line-height: 1.4; }
+
+    .btn {
+      padding: 9px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: opacity 0.15s;
+      width: 100%;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-blue   { background: #0ea5e9; color: #fff; }
+    .btn-purple { background: #8b5cf6; color: #fff; }
+
+    .status-msg { font-size: 0.75rem; color: #64748b; min-height: 16px; }
+    .status-msg.error { color: #dc2626; }
+
+    main { padding: 24px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; }
+
+    .empty-state {
+      margin: auto;
+      text-align: center;
+      color: #94a3b8;
+      max-width: 320px;
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .empty-state h2 { font-size: 1rem; color: #64748b; margin-bottom: 6px; }
+    .empty-state p { font-size: 0.82rem; line-height: 1.5; }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 14px 16px;
+      border: 1px solid #e2e8f0;
+    }
+    .stat-card .label { font-size: 0.7rem; color: #64748b; }
+    .stat-card .value { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; margin-top: 2px; }
+    .stat-card .sub   { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
+
+    .panel {
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .panel-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .panel-header-main h3 { font-size: 0.85rem; font-weight: 600; color: #1a1a2e; }
+    .panel-header-main p  { font-size: 0.75rem; color: #64748b; margin-top: 2px; line-height: 1.4; }
+    .panel-body { padding: 16px; }
+
+    #mermaid-render { overflow-x: auto; }
+
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .task-card {
+      border-radius: 8px;
+      padding: 14px;
+      border: 1.5px solid transparent;
+    }
+    .task-card.no-buffer {
+      background: #fff1f2;
+      border-color: #fda4af;
+    }
+    .task-card.has-buffer {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+    }
+    .task-card .task-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .task-card.no-buffer .task-name { color: #be123c; }
+    .task-card.has-buffer .task-name { color: #1a1a2e; }
+
+    .urgency-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 0.03em;
+    }
+    .badge-urgent { background: #ff6b6b; color: #fff; }
+    .badge-buffer { background: #dcfce7; color: #15803d; }
+
+    .task-detail { font-size: 0.75rem; color: #64748b; margin-top: 4px; line-height: 1.5; }
+    .task-detail strong { color: #374151; }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Project Planner — What has to happen first?</h1>
+    <p>Shows you which tasks can't slip, which have breathing room, and how long your project really takes</p>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div>
+        <div class="section-label">Your Projects</div>
+        <div class="project-list" id="project-list">
+          <p class="status-msg">Loading…</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Pull from GitHub</div>
+        <div class="input-group">
+          <input type="url" id="github-url" placeholder="https://github.com/you/your-repo">
+          <p class="input-hint">Imports your issues and pull requests as tasks, then maps out which ones depended on each other.</p>
+          <button class="btn btn-blue" onclick="importGitHub()">Import from GitHub</button>
+          <p class="status-msg" id="github-status"></p>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Describe Any Project</div>
+        <div class="input-group">
+          <textarea id="transcript-input" placeholder="Write it how you'd explain it to someone: 'First I need to update my resume (3 days). Once that's done I can start applying (5 days). After I get responses, I prepare for interviews (7 days).'"></textarea>
+          <p class="input-hint">Works for job searches, events, product launches — anything with steps that depend on each other.</p>
+          <button class="btn btn-purple" onclick="parseTranscript()">Map It Out</button>
+          <p class="status-msg" id="parse-status"></p>
+        </div>
+      </div>
+    </aside>
+
+    <main id="main-content">
+      <div class="empty-state">
+        <div class="icon">🗺️</div>
+        <h2>Pick a project to see its map</h2>
+        <p>You'll see which tasks are the bottlenecks, which ones have breathing room, and how the whole thing flows from start to finish.</p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral', flowchart: { useMaxWidth: true, curve: 'basis' } });
+
+    async function loadProjects() {
+      const res = await fetch('/api/projects');
+      const projects = await res.json();
+      const list = document.getElementById('project-list');
+      if (!projects.length) {
+        list.innerHTML = '<p class="status-msg">No projects yet — import one or describe one below</p>';
+        return;
+      }
+      list.innerHTML = projects.map(p =>
+        `<button class="project-btn" onclick="loadProject(${p.id}, this)">${p.name}</button>`
+      ).join('');
+    }
+
+    async function loadProject(id, btn) {
+      document.querySelectorAll('.project-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const [diagramRes, projectRes] = await Promise.all([
+        fetch(`/api/projects/${id}/network-diagram`),
+        fetch(`/api/projects/${id}`)
+      ]);
+      const diagram = await diagramRes.json();
+      const project = await projectRes.json();
+      renderDashboard(project, diagram);
+    }
+
+    function renderDashboard(project, diagram) {
+      const bottlenecks = diagram.nodes.filter(n => n.is_critical);
+      const flexTasks   = diagram.nodes.filter(n => !n.is_critical);
+      const chainNames  = diagram.critical_path.map(id => {
+        const n = diagram.nodes.find(n => n.id === id);
+        return n ? n.label.replace(/ \(\d+d\)$/, '') : id;
+      }).join(' → ');
+
+      const taskCardsHtml = diagram.nodes.map(n => {
+        const name = n.label.replace(/ \(\d+d\)$/, '');
+        const earliest = `Day ${n.es}–${n.ef}`;
+        const latest   = n.is_critical ? 'no flexibility' : `Can start up to day ${n.ls}`;
+        const bufferMsg = n.is_critical
+          ? `<span class="urgency-badge badge-urgent">Must stay on schedule</span>`
+          : `<span class="urgency-badge badge-buffer">+${n.slack} day buffer</span>`;
+        return `
+          <div class="task-card ${n.is_critical ? 'no-buffer' : 'has-buffer'}">
+            <div class="task-name">${name}</div>
+            ${bufferMsg}
+            <div class="task-detail">
+              <strong>Duration:</strong> ${n.duration} day${n.duration !== 1 ? 's' : ''}<br>
+              <strong>Earliest window:</strong> ${earliest}<br>
+              <strong>Flexibility:</strong> ${latest}
+            </div>
+          </div>`;
+      }).join('');
+
+      document.getElementById('main-content').innerHTML = `
+        <div class="stats-bar">
+          <div class="stat-card">
+            <div class="label">Project</div>
+            <div class="value" style="font-size:0.95rem;padding-top:5px;line-height:1.3">${project.name}</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Minimum time to finish</div>
+            <div class="value">${diagram.project_duration}<span style="font-size:1rem;font-weight:400"> days</span></div>
+            <div class="sub">if everything goes to plan</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Tasks that can't slip</div>
+            <div class="value" style="color:#be123c">${bottlenecks.length}</div>
+            <div class="sub">delay any of these, project delays</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Tasks with breathing room</div>
+            <div class="value" style="color:#16a34a">${flexTasks.length}</div>
+            <div class="sub">can be delayed without impact</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-header-main">
+              <h3>The chain that controls your timeline</h3>
+              <p>${chainNames}</p>
+              <p style="margin-top:4px">These tasks are linked end-to-end. If any one of them runs late, the whole project runs late by the same amount. The red nodes below are this chain.</p>
+            </div>
+            <div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#ff6b6b"></div> Can't slip</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#e2e8f0;border:1px solid #cbd5e1"></div> Has buffer</div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="mermaid-render"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-header-main">
+              <h3>Every task at a glance</h3>
+              <p>Red = must stay on schedule. Green badge = has buffer days — some flexibility if something comes up.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="task-grid">${taskCardsHtml}</div>
+          </div>
+        </div>
+      `;
+
+      mermaid.render('mermaid-svg', diagram.mermaid).then(({ svg }) => {
+        document.getElementById('mermaid-render').innerHTML = svg;
+      }).catch(() => {
+        document.getElementById('mermaid-render').innerHTML =
+          '<p style="color:#94a3b8;font-size:0.8rem">Diagram rendering failed — Mermaid string: <pre style="font-size:0.7rem;overflow-x:auto">' + diagram.mermaid + '</pre></p>';
+      });
+    }
+
+    async function importGitHub() {
+      const url = document.getElementById('github-url').value.trim();
+      const status = document.getElementById('github-status');
+      if (!url) { status.textContent = 'Paste a GitHub repo URL first'; return; }
+      status.textContent = 'Importing…';
+      try {
+        const res = await fetch('/api/github/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        status.textContent = '✓ Imported!';
+        await loadProjects();
+        loadProject(data.project_id);
+      } catch {
+        status.className = 'status-msg error';
+        status.textContent = 'GitHub import not wired up yet — coming next.';
+      }
+    }
+
+    async function parseTranscript() {
+      const text = document.getElementById('transcript-input').value.trim();
+      const status = document.getElementById('parse-status');
+      if (!text) { status.textContent = 'Describe your project first'; return; }
+      status.textContent = 'Working it out…';
+      try {
+        const res = await fetch('/api/projects/parse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        status.className = 'status-msg';
+        status.textContent = '✓ Project mapped!';
+        await loadProjects();
+        loadProject(data.project_id);
+      } catch {
+        status.className = 'status-msg error';
+        status.textContent = 'Transcript parser not wired up yet — coming next.';
+      }
+    }
+
+    loadProjects();
+  </script>
+</body>
+</html>
