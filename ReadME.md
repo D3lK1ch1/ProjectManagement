@@ -1,28 +1,33 @@
 # Project Management Analytics System
-A web-app taking GitHub projects for analysis in order to plan project management.
+
+A Symfony project for exploring project management analytics with PERT/CPM critical path analysis.
 
 ## Description
 
-A Symfony REST API that takes a GitHub repository URL, maps its commit history into activities, and runs PERT/CPM critical path analysis to generate project management insights and network diagrams.
+This is currently a scaffold/demo-stage Symfony REST API. The working core models projects, activities, and activity dependencies, then calculates critical path outputs from demo data. GitHub import is planned, but not implemented yet.
 
 ---
 
 ## Current Features
 
-- Symfony 8.0 REST API scaffold with SQLite (local dev)
-- `Project` and `Activity` Doctrine ORM entities
+- Symfony 8.0 REST API scaffold with SQLite for local development
+- `Project`, `Activity`, and `ActivityDependency` Doctrine ORM entities
 - Database schema managed via Doctrine Migrations
+- `CriticalPathService` for forward pass, backward pass, slack, and critical path output
+- Project API endpoints for listing projects, critical path results, and network diagram data
+- Demo fixture data for an eight-activity CPM example
+- Static demo page for viewing project flow locally
 
 ---
 
 ## Built With
 
-- **PHP 8.4** — language runtime
-- **Symfony 8.0** — REST API framework, dependency injection, routing
-- **Doctrine ORM** — entity mapping and migrations
-- **SQLite** — local development database (`var/data.db`)
-- **GitHub REST API** — planned source of commit and branch data
-- **Mermaid.js** — planned diagram rendering
+- **PHP 8.4** - language runtime
+- **Symfony 8.0** - REST API framework, dependency injection, routing
+- **Doctrine ORM** - entity mapping and migrations
+- **SQLite** - local development database (`var/data.db`)
+- **Mermaid.js** - diagram rendering for the local demo
+- **GitHub REST API** - planned source of commit and branch data
 
 ---
 
@@ -40,12 +45,13 @@ git clone <repo-url>
 cd ProjectManagement
 composer install
 php bin/console doctrine:migrations:migrate
+php bin/console doctrine:fixtures:load
 php -S localhost:8000 -t public public/index.php
 ```
 
-Visit `http://localhost:8000` to confirm the Symfony welcome page loads.
+Visit `http://localhost:8000/demo.html` to try the current demo flow.
 
-Optional — add a GitHub token to avoid API rate limits (never commit this file):
+Optional: add a GitHub token later to avoid API rate limits once GitHub import is implemented. Never commit this file:
 
 ```bash
 # .env.local
@@ -56,20 +62,28 @@ GITHUB_TOKEN=your_personal_access_token
 
 ## Usage
 
-_To be documented once API endpoints are implemented._
+Current scaffold/demo endpoints:
+
+- `GET /api/projects`
+- `GET /api/projects/{id}`
+- `GET /api/projects/{id}/critical-path`
+- `GET /api/projects/{id}/network-diagram`
 
 ---
 
 ## Roadmap
-- [ ] `ActivityDependency` entity (predecessor/successor graph edges)
-- [ ] `CriticalPathService` — forward pass, backward pass, slack, critical path
-- [ ] `ProjectController` — `GET /api/projects`, `GET /api/projects/{id}/critical-path`
-- [ ] `GitHubController` — `POST /api/github/import`
+
+- [x] `ActivityDependency` entity for predecessor/successor graph edges
+- [x] `CriticalPathService` for forward pass, backward pass, slack, and critical path
+- [x] `ProjectController` for project and critical path API endpoints
+- [x] Network diagram endpoint returning Mermaid-compatible data
+- [ ] Route-level tests for project API endpoints
+- [ ] Tighter dependency query scoping for selected projects
+- [ ] `GitHubController` with `POST /api/github/import`
 - [ ] Map commits and branches to activities and dependencies
-- [ ] Network diagram endpoint returning Mermaid-compatible data
-- [ ] Azure App Service (PHP 8.4)
-- [ ] Azure SQL or SQLite-on-disk for production
-- [ ] Application Insights for monitoring
+- [ ] Azure App Service deployment
+- [ ] Azure SQL or another production database option
+- [ ] Application Insights or another monitoring option
 
 ---
 
